@@ -71,8 +71,8 @@ touch $LOG_FILENAME
 
 {
     # Github details.
-    GIT_REPROSITORY="${GIT_REPROSITORY:-msazurestackworkloads/kubetools}"
-    GIT_BRANCH="${GIT_BRANCH:-master}"
+    GIT_REPROSITORY="${GIT_REPROSITORY:-haofan-ms/kubetools}"
+    GIT_BRANCH="${GIT_BRANCH:-azure-cni-network-policy-tests}"
     TEST_DIRECTORY="/home/$USER_NAME/azure-cni-network-policies"
     NGINX_DEPLOY_FILENAME="nginx_deploy.yaml"
     BUSYBOX_DEPLOY_FILENAME="busybox_deploy.yaml"
