@@ -158,8 +158,8 @@ touch $LOG_FILENAME
     fi 
 
     ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "sudo chmod 744 $TEST_DIRECTORY/$BUSYBOX_DEPLOY_FILENAME; cd $TEST_DIRECTORY;"
-    busybox=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl create -f $BUSYBOX_DEPLOY_FILENAME";sleep 10)
-    busybox_deploy=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl get pod -o json > busybox_pod.json")
+    busybox=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl create -f $BUSYBOX_DEPLOY_FILENAME";sleep 30)
+    busybox_deploy=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl get pod busybox -o json > busybox_pod.json")
     busybox_status=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_pod.json | jq '.items[0]."status"."conditions"[1].type'" | grep "Ready";sleep 2m)
     busybox_log=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl logs busybox > busybox_log.txt")
 

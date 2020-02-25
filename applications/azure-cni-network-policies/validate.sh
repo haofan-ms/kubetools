@@ -54,26 +54,54 @@ touch $LOG_FILENAME
     
     log_level -i "Evaluate Log from busybox Pod"
     if ! grep -q "$NGINX_WELCOME" "busybox_log.txt"; then
-        log_level -e "Failed to access nginx pod."
+        log_level -e "Failed to access nginx pod." 
+        result="failed"
+        printf '{"result":"%s","error":"%s"}\n' "$result" "Failed to access nginx pod." > $OUTPUT_SUMMARYFILE
         exit 1
     fi
 
     log_level -i "Create Network Policy rule to block ingress traffic to nginx pod"
     ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl create -f $NETWORK_POLICY_FILENAME";sleep 10
+    network_policy_create=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl get networkPolicy -o json > network_policy.json")
+    network_policy_status=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat network_policy.json | jq '.items[0]."metadata"."name"'" | grep "azure-cni";sleep 2m)
+
+    if [ $? == 0 ]; then
+        log_level -i "Created Azure CNI network policy."
+    else    
+        log_level -e "Azure CNI network policy creation failed."
+        result="failed"
+        printf '{"result":"%s","error":"%s"}\n' "$result" "Azure CNI network policy creation was not successfull." > $OUTPUT_SUMMARYFILE
+        exit 1
+    fi 
 
     log_level -i "Delete the old busybox pod"
     ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl delete pod busybox";sleep 60
-
+    
     log_level -i "Create and evaluate log from busybox Pod again"
     busybox_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl create -f $BUSYBOX_DEPLOY_FILENAME";sleep 10)
     busybox_deploy_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl get pod -o json > busybox_pod_new.json")
     busybox_status_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_pod_new.json | jq '.items[0]."status"."conditions"[1].type'" | grep "Ready";sleep 2m)
     busybox_log_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl logs busybox > busybox_log_new.txt")
+
+    if [ $? == 0 ]; then
+        log_level -i "Deployed new busybox pod."
+    else    
+        log_level -e "New busybox deployment failed."
+        result="failed"
+        printf '{"result":"%s","error":"%s"}\n' "$result" "New busybox deployment was not successfull." > $OUTPUT_SUMMARYFILE
+        exit 1
+    fi 
+
     if ! grep -q "$DOWNLOAD_TIMEDOUT" "busybox_log_new.txt"; then
         log_level -e "Network Policy failed to block ingress traffic."
+        result="failed"
+        printf '{"result":"%s","error":"%s"}\n' "$result" "Network Policy failed to block ingress traffic." > $OUTPUT_SUMMARYFILE
         exit 1
     fi
 
-    log_level -i "All tests passed"        
+    log_level -i "All tests passed" 
+    log_level -i "=========================================================================="
+    result="pass"
+    printf '{"result":"%s"}\n' "$result" > $OUTPUT_SUMMARYFILE
 } \
 2>&1 | tee $LOG_FILENAME
