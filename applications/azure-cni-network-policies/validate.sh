@@ -42,7 +42,6 @@ touch $LOG_FILENAME
     DOWNLOAD_TIMEDOUT="download timed out"
     BUSYBOX_DEPLOY_FILENAME="busybox_deploy.yaml"
 
-    \
     log_level -i "------------------------------------------------------------------------"
     log_level -i "                Inner Variables"
     log_level -i "------------------------------------------------------------------------"
