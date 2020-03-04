@@ -65,7 +65,7 @@ if [[ -z "$mariadbPodstatus" ]]; then
 fi
 
 if [[ -z "$wdpressPodstatus" ]]; then
-    $failedPods="wordpress, "$failedPods
+    $failedPods="wordpress, ${failedPods}"
 fi
 
 if [[ ! -z "$failedPods" ]]; then
