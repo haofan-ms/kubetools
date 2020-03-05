@@ -122,7 +122,6 @@ touch $LOG_FILENAME
     nginx=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl create -f $NGINX_DEPLOY_FILENAME";sleep 60)
     nginx_deploy=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl get deployment -o json > nginx_deploy.json")
     nginx_status=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat nginx_deploy.json | jq '.items[0]."status"."conditions"[0].type'" | grep "Available";sleep 2m)
-    nginx_services=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl get services nginx -o json > nginx_service.json")
 
     if [ $? == 0 ]; then
         log_level -i "Deployed nginx app."
@@ -132,6 +131,8 @@ touch $LOG_FILENAME
         printf '{"result":"%s","error":"%s"}\n' "$result" "Nginx deployment was not successfull." > $OUTPUT_SUMMARYFILE
         exit 1
     fi 
+
+    nginx_services=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl get services nginx -o json > nginx_service.json")
 
     ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "sudo chmod 744 $TEST_DIRECTORY/$BUSYBOX_DEPLOY_FILENAME; cd $TEST_DIRECTORY;"
     busybox=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl create -f $BUSYBOX_DEPLOY_FILENAME";sleep 30)
