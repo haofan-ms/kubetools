@@ -106,7 +106,6 @@ touch $LOG_FILENAME
     busybox_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl create -f $BUSYBOX_DEPLOY_FILENAME";sleep 10)
     busybox_deploy_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl get pod -o json > busybox_pod_new.json")
     busybox_status_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_pod_new.json | jq '.items[0]."status"."conditions"[1].type'" | grep "Ready")
-    busybox_log_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl logs busybox > busybox_log_new.txt")
 
     if [ $? == 0 ]; then
         log_level -i "Deployed new busybox pod."
@@ -116,6 +115,8 @@ touch $LOG_FILENAME
         printf '{"result":"%s","error":"%s"}\n' "$result" "New busybox deployment was not successfull." > $OUTPUT_SUMMARYFILE
         exit 1
     fi 
+
+    busybox_log_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl logs busybox > busybox_log_new.txt")
 
     validate_blocks=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_log_new.txt" | grep "$DOWNLOAD_TIMEDOUT")
     if [[ -z $validate_blocks ]]; then
