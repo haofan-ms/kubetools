@@ -137,7 +137,6 @@ touch $LOG_FILENAME
     busybox=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl create -f $BUSYBOX_DEPLOY_FILENAME";sleep 30)
     busybox_deploy=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl get pod busybox -o json > busybox_pod.json")
     busybox_status=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_pod.json | jq '.items[0]."status"."conditions"[1].type'" | grep "Ready")
-    busybox_log=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl logs busybox > busybox_log.txt")
 
     if [ $? == 0 ]; then
         log_level -i "Deployed busybox pod."
@@ -147,6 +146,8 @@ touch $LOG_FILENAME
         printf '{"result":"%s","error":"%s"}\n' "$result" "Busybox deployment was not successfull." > $OUTPUT_SUMMARYFILE
         exit 1
     fi 
+
+    busybox_log=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl logs busybox > busybox_log.txt")
     
     log_level -i "=========================================================================="
     result="pass"
