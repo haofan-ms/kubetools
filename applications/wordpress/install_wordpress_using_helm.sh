@@ -29,7 +29,7 @@ echo "Update helm repository..."
 helm repo update
 
 echo "Install wordpress..."
-helm install stable/wordpress --set wordpressSkipInstall=false,nodeSelector."beta\\.kubernetes\\.io/os"=linux
+helm install stable/wordpress --set wordpressSkipInstall=false --node-selectors "beta.kubernetes.io/os"="linux"
 
 echo "Done with installation, checking release status..."
 wpRelease=$(helm ls -d -r | grep -i 'DEPLOYED\(.*\)wordpress' | grep -Eo '^[a-z,-]+')
