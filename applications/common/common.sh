@@ -118,11 +118,11 @@ install_helm_app() {
     if [[ -z $namespace ]]; then
         ssh -t -i $identityFile \
         $userName@$connectionIP \
-        "helm install stable/$appName"
+        "helm install stable/$appName --set nodeSelector.'beta\\.kubernetes\\.io/os'=linux"
     else
         ssh -t -i $identityFile \
         $userName@$connectionIP \
-        "helm install stable/$appName --namespace $namespace"
+        "helm install stable/$appName --namespace $namespace --set nodeSelector.'beta\\.kubernetes\\.io/os'=linux"
     fi
     appReleaseName=$(ssh -i $identityFile $userName@$connectionIP "helm ls -d -r | grep 'DEPLOYED\(.*\)$appName' | grep -Eo '^[a-z,-]+'")
     if [ -z "$appReleaseName" ]; then

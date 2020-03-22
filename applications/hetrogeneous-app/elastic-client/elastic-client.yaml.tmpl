@@ -19,6 +19,8 @@ spec:
         image: msazurestackqa/elasticsearch-test-client:latest
         ports:
         - containerPort: 3000
+      nodeSelector:
+        beta.kubernetes.io/os: linux
 ---
 apiVersion: v1
 kind: Service
