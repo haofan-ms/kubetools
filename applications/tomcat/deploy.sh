@@ -3,8 +3,8 @@
 FILE_NAME=$0
 
 SCRIPT_FOLDER="$(dirname $FILE_NAME)"
-GIT_REPROSITORY="${GIT_REPROSITORY:-msazurestackworkloads/kubetools}"
-GIT_BRANCH="${GIT_BRANCH:-master}"
+GIT_REPROSITORY="${GIT_REPROSITORY:-haofan-ms/kubetools}"
+GIT_BRANCH="${GIT_BRANCH:-update_winContainer}"
 COMMON_SCRIPT_FILENAME="common.sh"
 
 # Download common script file.

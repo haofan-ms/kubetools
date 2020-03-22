@@ -6,8 +6,8 @@ FILENAME=$0
 
 SCRIPT_LOCATION=$(dirname $FILENAME)
 COMMON_SCRIPT_FILENAME="common.sh"
-GIT_REPROSITORY="${GIT_REPROSITORY:-msazurestackworkloads/kubetools}"
-GIT_BRANCH="${GIT_BRANCH:-master}"
+GIT_REPROSITORY="${GIT_REPROSITORY:-haofan-ms/kubetools}"
+GIT_BRANCH="${GIT_BRANCH:-update_winContainer}"
 
 # Download common script file.
 curl -o $SCRIPT_DIRECTORY/$COMMON_SCRIPT_FILENAME \
