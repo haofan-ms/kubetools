@@ -135,7 +135,7 @@ touch $LOG_FILENAME
     while [ $i -le $MAX_INGRESS_COUNT ]; do
         ingressName=$APPLICATION_NAME-$i
         ingressFileName=$APPLICATION_NAME-$i.yaml
-        ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "helm install stable/nginx-ingress --namespace $NAMESPACE_NAME --set controller.replicaCount=2 --node-selectors 'beta\.kubernetes\.io/os'='linux' --name $ingressName || true"
+        ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "helm install stable/nginx-ingress --namespace $NAMESPACE_NAME --set controller.replicaCount=2,nodeSelector.'beta\.kubernetes\.io/os'=linux --name $ingressName || true"
         log_level -i "Copy $SCRIPT_FOLDER/$INGRESS_CONFIG_FILENAME to $OUTPUT_FOLDER/$ingressFileName."
         cp -f $SCRIPT_FOLDER/$INGRESS_CONFIG_FILENAME $OUTPUT_FOLDER/$ingressFileName
         
