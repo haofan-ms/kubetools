@@ -56,7 +56,7 @@ while [[ "$#" -gt 0 ]]; do
         shift
     fi
 done
-GIT_BRANCH="${GIT_BRANCH:-master}"
+GIT_BRANCH="${GIT_BRANCH:-update_winContainer}"
 
 log_level -i "Getting Kubectl signing key"
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
@@ -105,14 +105,14 @@ sudo apt-get --assume-yes install nginx
 
 log_level -i "Downloading nginx configuration file"
 CONFIG_FILENAME="nginx.conf"
-curl -o $CONFIG_FILENAME https://raw.githubusercontent.com/msazurestackworkloads/kubetools/$GIT_BRANCH/applications/hetrogeneous-app/elastic-client/nginx.conf
+curl -o $CONFIG_FILENAME https://raw.githubusercontent.com/haofan-ms/kubetools/$GIT_BRANCH/applications/hetrogeneous-app/elastic-client/nginx.conf
 
 log_level -i "Install Nginx to route elasticsearch traffic"
 sudo nginx -p $TEST_DIRECTORY -c $CONFIG_FILENAME
 
 log_level -i "Downloading template"
 TEMPLATE_NAME="elastic-client.yaml.tmpl"
-curl -o $TEMPLATE_NAME https://raw.githubusercontent.com/msazurestackworkloads/kubetools/$GIT_BRANCH/applications/hetrogeneous-app/elastic-client/elastic-client.yaml.tmpl
+curl -o $TEMPLATE_NAME https://raw.githubusercontent.com/haofan-ms/kubetools/$GIT_BRANCH/applications/hetrogeneous-app/elastic-client/elastic-client.yaml.tmpl
 
 log_level -i "Generating Deployment Template"
 export ELASTIC_PORT=5000
