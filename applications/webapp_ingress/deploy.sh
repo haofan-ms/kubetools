@@ -210,7 +210,7 @@ touch $LOG_FILENAME
         let i=i+1
     done
     
-    deploymentNames=($(ssh -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "kubectl get services -n $NAMESPACE_NAME -o json | jq --arg type 'ClusterIP' '.items[] | select(.spec.type == \$type) | select(.spec.selector.component == null) | .metadata.name'"))
+    deploymentNames=($(ssh -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "kubectl get services -n $NAMESPACE_NAME -o json | jq --arg type 'ClusterIP' '.items[] | select(.spec.type == \$type) | select(.metadata.labels.component == null) | .metadata.name'"))
     deploymentCount="${#deploymentNames[@]}"
     log_level -i "App Deployment count is $deploymentCount"
     if [ $deploymentCount -eq $MAX_INGRESS_SERVICE_COUNT ]; then
