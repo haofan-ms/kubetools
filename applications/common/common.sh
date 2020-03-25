@@ -534,5 +534,5 @@ install_ingress_application() {
     local title=$3
     local serviceName=$4
     
-    helm install $helmApplicationName --namespace $namespaceName --set title="$title" --set serviceName="$serviceName"
+    helm install $helmApplicationName --namespace $namespaceName --set nodeSelector."beta\.kubernetes\.io/os"=linux,title="$title",serviceName="$serviceName"
 }
