@@ -174,7 +174,6 @@ touch $LOG_FILENAME
         let i=i+1
     done
     
-    ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "helm repo add azs-ecs https://raw.githubusercontent.com/msazurestackworkloads/helm-charts/master/repo/"
     i=1
     ingressCount=0
     while [ $i -le $MAX_INGRESS_SERVICE_COUNT ]; do
@@ -187,7 +186,7 @@ touch $LOG_FILENAME
         ingressConfigFileName=$APPLICATION_NAME-$ingressCount.yaml
         randomName=$(cat /dev/urandom | tr -dc 'a-z' | fold -w 3 | head -n 1)
         serviceName=$APPLICATION_NAME-$randomName$i
-        ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_FOLDER; source $COMMON_SCRIPT_FILENAME; install_ingress_application $HELM_APPLICATION_NAME $NAMESPACE_NAME $serviceName $serviceName"
+        ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_FOLDER; source $COMMON_SCRIPT_FILENAME; helm install $HELM_APPLICATION_NAME --namespace $NAMESPACE_NAME --generate-name"
         echo "      - backend:
           serviceName: $serviceName
           servicePort: 80

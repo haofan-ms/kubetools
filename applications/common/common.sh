@@ -103,6 +103,11 @@ install_helm_chart() {
     fi
     
     log_level -i "Helm got installed successfully. Helm version is: $helmVersion"
+
+    log_level -i "Adding azs-ecs repo to helm."
+    ssh -t -i $identityFile $userName@$connectionIP "helm repo add azs-ecs https://raw.githubusercontent.com/msazurestackworkloads/helm-charts/master/repo/"
+    log_level -i "azs-ecs repo added to helm."
+
     return 0
 }
 
@@ -118,11 +123,11 @@ install_helm_app() {
     if [[ -z $namespace ]]; then
         ssh -t -i $identityFile \
         $userName@$connectionIP \
-        "helm install stable/$appName"
+        "helm install azs-ecs/$appName --generate-name"
     else
         ssh -t -i $identityFile \
         $userName@$connectionIP \
-        "helm install stable/$appName --namespace $namespace"
+        "helm install azs-ecs/$appName --namespace $namespace --generate-name"
     fi
     appReleaseName=$(ssh -i $identityFile $userName@$connectionIP "helm ls -d -r | grep 'DEPLOYED\(.*\)$appName' | grep -Eo '^[a-z,-]+'")
     if [ -z "$appReleaseName" ]; then
