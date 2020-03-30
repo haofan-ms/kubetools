@@ -61,7 +61,7 @@ touch $LOG_FILENAME
     SECRETKEY_FILEANME="azs-ingress-tls.key"
     CN_NAME="test.azurestack.com"
     ORGANIZATION_NAME="azs-ingress-tls"
-    HELM_APPLICATION_NAME="azure-samples/aks-helloworld"
+    HELM_APPLICATION_NAME="azs-ecs/aks-helloworld"
     MAX_INGRESS_COUNT=2
     MAX_INGRESS_SERVICE_COUNT=8
     log_level -i "------------------------------------------------------------------------"
@@ -174,7 +174,7 @@ touch $LOG_FILENAME
         let i=i+1
     done
     
-    ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "helm repo add azure-samples https://raw.githubusercontent.com/jadarsie/helm-charts/master/docs/"
+    ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "helm repo add azs-ecs https://raw.githubusercontent.com/msazurestackworkloads/helm-charts/master/repo/"
     i=1
     ingressCount=0
     while [ $i -le $MAX_INGRESS_SERVICE_COUNT ]; do

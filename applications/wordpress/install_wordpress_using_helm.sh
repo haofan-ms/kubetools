@@ -14,10 +14,9 @@ echo "Deploy wordpress on Kubernete cluster through helm to check the health of 
 echo "Check prerequisite: helm..."
 
 # Check healm status
-helmClientVer="$(helm version | grep -o 'Client: \(.*\)[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}')"
-helmServerVer="$(helm version | grep -o 'Server: \(.*\)[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}')"
+helmVersion="$(helm version )"
 
-if [[ -z $helmClientVer ]] || [[ -z $helmServerVer ]]; then
+if [[ -z $helmVersion ]]; then
     echo  -e "${RED}Validation failed. Helm is not ready. Please install and initial helm before run this validation script.${NC}"
     exit 1
 fi

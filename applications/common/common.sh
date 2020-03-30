@@ -96,13 +96,13 @@ install_helm_chart() {
     ssh -t -i $identityFile \
     $userName@$connectionIP \
     "sudo chmod 744 $testFolder/$fileName; cd $testFolder; ./$fileName;"
-    helmServerVer=$(ssh -i $identityFile $userName@$connectionIP "helm version | grep -o 'Server: \(.*\)[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}'")
-    if [ -z "$helmServerVer" ]; then
+    helmVersion=$(ssh -i $identityFile $userName@$connectionIP "helm version")
+    if [ -z "$helmVersion" ]; then
         log_level -e "Helm install was not successfull."
         return 1
     fi
     
-    log_level -i "Helm got installed successfully. Helm version is: $helmServerVer"
+    log_level -i "Helm got installed successfully. Helm version is: $helmVersion"
     return 0
 }
 

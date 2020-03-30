@@ -50,7 +50,7 @@ touch $LOG_FILENAME
     # Cleanup.
     ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "kubectl delete namespace $NAMESPACE_NAME || true"
     # Wait for Namespace to be deleted.
-    ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "helm repo remove azure-samples || true"
+    ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "helm repo remove azs-ecs || true"
     
     releaseNames=$(ssh -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "helm ls -d -r | grep 'DEPLOYED\(.*\)$APPLICATION_NAME' | grep -Eo '^[a-z0-9,-]+' || true")
     if [ -z "$releaseNames" ]; then
