@@ -530,12 +530,3 @@ create_cert() {
     local organizationName=$4
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 -out $crtFileName -keyout $keyFileName -subj "/CN=$cnName/O=$organizationName"
 }
-
-install_ingress_application() {
-    local helmApplicationName=$1
-    local namespaceName=$2
-    local title=$3
-    local serviceName=$4
-    
-    helm install $helmApplicationName --namespace $namespaceName --set title="$title" --set serviceName="$serviceName"
-}
