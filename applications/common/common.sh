@@ -129,7 +129,7 @@ install_helm_app() {
         $userName@$connectionIP \
         "helm install azs-ecs/$appName --namespace $namespace --generate-name"
     fi
-    appReleaseName=$(ssh -i $identityFile $userName@$connectionIP "helm ls -d -r | grep 'deployed\(.*\)$appName' | grep -Eo '^[a-z,-]+\w+'")
+    appReleaseName=$(ssh -i $identityFile $userName@$connectionIP "helm ls -d -r --all-namespaces | grep 'deployed\(.*\)$appName' | grep -Eo '^[a-z,-]+\w+'")
     if [ -z "$appReleaseName" ]; then
         log_level -e "App($appName) deployment failed using Helm."
         return 1
@@ -249,7 +249,7 @@ check_helm_app_release_cleanup() {
     # Rechecking to make sure deployment cleanup done successfully.
     i=0
     while [ $i -lt 20 ]; do
-        releaseName=$(ssh -i $identityFile $userName@$connectionIP "helm ls -d -r | grep 'deployed\(.*\)$appName' | grep -Eo '^[a-z,-]+\w+' || true")
+        releaseName=$(ssh -i $identityFile $userName@$connectionIP "helm ls -d -r --all-namespaces | grep 'deployed\(.*\)$appName' | grep -Eo '^[a-z,-]+\w+' || true")
         if [ ! -z "$releaseName" ]; then
             log_level -i "Removal of app($appName) with release name($releaseName) is in progress."
             sleep 30s

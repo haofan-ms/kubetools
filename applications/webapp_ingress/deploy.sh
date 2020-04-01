@@ -184,14 +184,13 @@ touch $LOG_FILENAME
         ingressConfigFileName=$APPLICATION_NAME-$ingressCount.yaml
         randomName=$(cat /dev/urandom | tr -dc 'a-z' | fold -w 3 | head -n 1)
         serviceName=$APPLICATION_NAME-$randomName$i
-        ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "helm install azs-ecs/aks-helloworld --namespace $NAMESPACE_NAME --generate-name"
+        ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "helm install $randomName azs-ecs/aks-helloworld --namespace $NAMESPACE_NAME --set title="$serviceName",serviceName="$serviceName""
         echo "      - backend:
           serviceName: $serviceName
           servicePort: 80
         path: /$serviceName(/|$)(.*)" >> $OUTPUT_FOLDER/$ingressConfigFileName
         dos2unix $OUTPUT_FOLDER/$ingressConfigFileName
         sleep 15s
-        ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "helm ls -d -r"
         let i=i+1
     done
     

@@ -31,7 +31,7 @@ echo "Install wordpress..."
 helm install azs-ecs/wordpress --generate-name --set wordpressSkipInstall=false
 
 echo "Done with installation, checking release status..."
-wpRelease=$(helm ls -d -r | grep -i 'deployed\(.*\)wordpress' | grep -Eo '^[a-z,-]+\w+')
+wpRelease=$(helm ls -d -r --all-namespaces | grep -i 'deployed\(.*\)wordpress' | grep -Eo '^[a-z,-]+\w+')
 
 if [[ -z $wpRelease ]]; then
     echo  -e "${RED}Validation failed. Helm release for wordpress not found.${NC}"
@@ -75,7 +75,7 @@ fi
 # Check external IP for wordpress
 i=0
 while [ $i -lt 20 ];do
-    externalIp=$(sudo kubectl get services ${wpRelease}-wordpress -o=custom-columns=NAME:.status.loadBalancer.ingress[0].ip | grep -oP '(\d{1,3}\.){1,3}\d{1,3}')
+    externalIp=$(sudo kubectl get services ${wpRelease} -o=custom-columns=NAME:.status.loadBalancer.ingress[0].ip | grep -oP '(\d{1,3}\.){1,3}\d{1,3}')
     
     if [[ -z "$externalIp" ]]; then
         echo "Tracking wordpress external IP status..."

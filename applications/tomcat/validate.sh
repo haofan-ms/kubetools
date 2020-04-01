@@ -60,7 +60,7 @@ NAMESPACE="ns-tomcat"
     fi
     
     # check_app_has_externalip set global variable IP_ADDRESS.
-    APPLICATION_RELEASE_NAME=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "helm ls -d -r | grep 'deployed\(.*\)$APPLICATION_NAME' | grep -Eo '^[a-z,-]+\w+'")
+    APPLICATION_RELEASE_NAME=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "helm ls -d -r --all-namespaces | grep 'deployed\(.*\)$APPLICATION_NAME' | grep -Eo '^[a-z,-]+\w+'")
     log_level -i "APPLICATION_RELEASE_NAME:$APPLICATION_RELEASE_NAME"
     SERVICE_NAME=$APPLICATION_RELEASE_NAME"-"$APPLICATION_NAME
     log_level -i "SERVICE_NAME:$SERVICE_NAME"

@@ -51,7 +51,7 @@ touch $LOG_FILENAME
     ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "kubectl delete namespace $NAMESPACE_NAME || true"
     # Wait for Namespace to be deleted.
     
-    releaseNames=$(ssh -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "helm ls -d -r | grep 'deployed\(.*\)$APPLICATION_NAME' | grep -Eo '^[a-z0-9,-]+\w+' || true")
+    releaseNames=$(ssh -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "helm ls -d -r --all-namespaces | grep 'deployed\(.*\)$APPLICATION_NAME' | grep -Eo '^[a-z0-9,-]+\w+' || true")
     if [ -z "$releaseNames" ]; then
         log_level -w "No deployment found."
     else

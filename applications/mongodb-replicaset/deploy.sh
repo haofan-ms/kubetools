@@ -130,7 +130,7 @@ touch $LOG_FILENAME
     $USER_NAME@$MASTER_IP \
     "sudo chmod 744 $TEST_FOLDER/$MONGODB_SERVICE_FILENAME"
     
-    MONGORELEASE=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "helm ls -d -r | grep 'deployed\(.*\)mongodb-replicaset' | grep -Eo '^[a-z,-]+\w+'")
+    MONGORELEASE=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "helm ls -d -r --all-namespaces | grep 'deployed\(.*\)mongodb-replicaset' | grep -Eo '^[a-z,-]+\w+'")
     ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "sed -e 's,RELEASE-NAME,$MONGORELEASE,g' < $TEST_FOLDER/$MONGODB_SERVICE_FILENAME > $TEST_FOLDER/mongodb-service.yaml;sudo chmod +x $TEST_FOLDER/mongodb-service.yaml"
     
     mongo=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_FOLDER;sleep 10m;kubectl apply -f mongodb-service.yaml";sleep 5m)

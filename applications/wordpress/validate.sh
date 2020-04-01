@@ -88,11 +88,11 @@ touch $LOG_FILENAME
     log_level -i "Get all nodes details."
     ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "sudo kubectl get nodes -o wide"
     log_level -i "Get Helm deployment details."
-    ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "helm ls -d -r"
+    ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "helm ls -d -r --all-namespaces"
     log_level -i "Get all pods details ."
     ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "sudo kubectl get all -o wide"
 
-    wordPressDeploymentName=$(ssh -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "helm ls -d -r | grep -i 'deployed\(.*\)wordpress' | grep -Eo '^[a-z,-]+\w+'")
+    wordPressDeploymentName=$(ssh -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "helm ls -d -r --all-namespaces | grep -i 'deployed\(.*\)wordpress' | grep -Eo '^[a-z,-]+\w+'")
     mariadbPodstatus=$(ssh -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "sudo kubectl get pods --selector app=mariadb | grep 'Running'")
     wdpressPodstatus=$(ssh -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "kubectl get pods --selector app.kubernetes.io/instance=${wordPressDeploymentName} | grep 'Running'")
     failedPods=""
