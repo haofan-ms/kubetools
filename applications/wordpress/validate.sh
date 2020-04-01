@@ -115,7 +115,7 @@ touch $LOG_FILENAME
     
     # Check if App got external IP
     log_level -i "Validate if Pods got external IP address."
-    externalIp=$(ssh -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "sudo kubectl get services ${wordPressDeploymentName}-wordpress -o=custom-columns=NAME:.status.loadBalancer.ingress[0].ip | grep -oP '(\d{1,3}\.){1,3}\d{1,3}'")
+    externalIp=$(ssh -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "sudo kubectl get services ${wordPressDeploymentName} -o=custom-columns=NAME:.status.loadBalancer.ingress[0].ip | grep -oP '(\d{1,3}\.){1,3}\d{1,3}'")
     if [ -z "$externalIp" ]; then
         log_level -e "External IP not found for wordpress."
         result="failed"
