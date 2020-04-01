@@ -31,7 +31,7 @@ echo "Install wordpress..."
 helm install azs-ecs/wordpress --generate-name --set wordpressSkipInstall=false
 
 echo "Done with installation, checking release status..."
-wpRelease=$(helm ls -d -r | grep -i 'DEPLOYED\(.*\)wordpress' | grep -Eo '^[a-z,-]+')
+wpRelease=$(helm ls -d -r | grep -i 'deployed\(.*\)wordpress' | grep -Eo '^[a-z,-]+\w+')
 
 if [[ -z $wpRelease ]]; then
     echo  -e "${RED}Validation failed. Helm release for wordpress not found.${NC}"

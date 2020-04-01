@@ -61,7 +61,6 @@ touch $LOG_FILENAME
     SECRETKEY_FILEANME="azs-ingress-tls.key"
     CN_NAME="test.azurestack.com"
     ORGANIZATION_NAME="azs-ingress-tls"
-    HELM_APPLICATION_NAME="azs-ecs/aks-helloworld"
     MAX_INGRESS_COUNT=2
     MAX_INGRESS_SERVICE_COUNT=8
     log_level -i "------------------------------------------------------------------------"
@@ -72,7 +71,6 @@ touch $LOG_FILENAME
     log_level -i "CERT_FILENAME               : $CERT_FILENAME"
     log_level -i "CN_NAME                     : $CN_NAME"
     log_level -i "HELM_INSTALL_FILENAME       : $HELM_INSTALL_FILENAME"
-    log_level -i "HELM_APPLICATION_NAME       : $HELM_APPLICATION_NAME"
     log_level -i "INGRESS_CONFIG_FILENAME     : $INGRESS_CONFIG_FILENAME"
     log_level -i "GIT_BRANCH                  : $GIT_BRANCH"
     log_level -i "GIT_REPROSITORY             : $GIT_REPROSITORY"
@@ -186,13 +184,14 @@ touch $LOG_FILENAME
         ingressConfigFileName=$APPLICATION_NAME-$ingressCount.yaml
         randomName=$(cat /dev/urandom | tr -dc 'a-z' | fold -w 3 | head -n 1)
         serviceName=$APPLICATION_NAME-$randomName$i
-        ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_FOLDER; source $COMMON_SCRIPT_FILENAME; helm install $HELM_APPLICATION_NAME --namespace $NAMESPACE_NAME --generate-name"
+        ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "helm install azs-ecs/aks-helloworld --namespace $NAMESPACE_NAME --generate-name"
         echo "      - backend:
           serviceName: $serviceName
           servicePort: 80
         path: /$serviceName(/|$)(.*)" >> $OUTPUT_FOLDER/$ingressConfigFileName
         dos2unix $OUTPUT_FOLDER/$ingressConfigFileName
         sleep 15s
+        ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "helm ls -d -r"
         let i=i+1
     done
     
