@@ -135,12 +135,13 @@ touch $LOG_FILENAME
     
     mongo=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_FOLDER;sleep 10m;kubectl apply -f mongodb-service.yaml";sleep 5m)
     app_mongo=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "sudo kubectl get services mongodb-replicaset-service -o=custom-columns=NAME:.status.loadBalancer.ingress[0].ip | grep -oP '(\d{1,3}\.){1,3}\d{1,3}'")
+    log_level -i "App_mongo: ($app_mongo)."
     echo $app_mongo > $MONGO_SERVICE
 
     ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "sudo apt-get install mongodb-clients -y"
-    ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "kubectl exec --namespace default $MONGORELEASE-mongodb-replicaset-0 -- sh -c 'mongo --eval=\"printjson(rs.isMaster())\"' >> test_res"
-    ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "kubectl exec --namespace default $MONGORELEASE-mongodb-replicaset-1 -- sh -c 'mongo --eval=\"printjson(rs.isMaster())\"' >> test_res"
-    ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "kubectl exec --namespace default $MONGORELEASE-mongodb-replicaset-2 -- sh -c 'mongo --eval=\"printjson(rs.isMaster())\"' >> test_res"
+    ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "kubectl exec --namespace default $MONGORELEASE-0 -- sh -c 'mongo --eval=\"printjson(rs.isMaster())\"' >> test_res"
+    ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "kubectl exec --namespace default $MONGORELEASE-1 -- sh -c 'mongo --eval=\"printjson(rs.isMaster())\"' >> test_res"
+    ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "kubectl exec --namespace default $MONGORELEASE-2 -- sh -c 'mongo --eval=\"printjson(rs.isMaster())\"' >> test_res"
 
     PRIMARY_MONGODB=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cat test_res | grep 'primary' | head -n 1 | cut -b 15- | cut -d. -f1")
     
