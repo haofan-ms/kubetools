@@ -1,9 +1,24 @@
 kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
-  name: azure-cni
+  name: azure-cni-block-ingress
 spec:
   podSelector:
     matchLabels:
       role: nginx
   ingress: []
+  policyTypes:
+    - Ingress
+
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: azure-cni-block-egress
+spec:
+  podSelector:
+    matchLabels:
+      app: busybox-egress
+  egress: []
+  policyTypes:
+  - Egress

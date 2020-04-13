@@ -136,19 +136,33 @@ touch $LOG_FILENAME
 
     ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "sudo chmod 744 $TEST_DIRECTORY/$BUSYBOX_DEPLOY_FILENAME; cd $TEST_DIRECTORY;"
     busybox=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl create -f $BUSYBOX_DEPLOY_FILENAME";sleep 30)
-    busybox_deploy=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl get pod busybox -o json > busybox_pod.json")
-    busybox_status=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_pod.json | jq '."status"."conditions"[1].type'" | grep "Ready")
+    
+    busybox_ingress_deploy=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl get pod busybox-ingress -o json > busybox_ingress_pod.json")
+    busybox_ingress_status=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_ingress_pod.json | jq '."status"."conditions"[1].type'" | grep "Ready")
 
     if [ $? == 0 ]; then
-        log_level -i "Deployed busybox pod."
+        log_level -i "Deployed busybox-ingress pod."
     else    
-        log_level -e "Busybox deployment failed."
+        log_level -e "Busybox-ingress deployment failed."
         result="failed"
-        printf '{"result":"%s","error":"%s"}\n' "$result" "Busybox deployment was not successfull." > $OUTPUT_SUMMARYFILE
+        printf '{"result":"%s","error":"%s"}\n' "$result" "Busybox-ingress deployment was not successfull." > $OUTPUT_SUMMARYFILE
         exit 1
     fi 
 
-    busybox_log=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl logs busybox > busybox_log.txt")
+    busybox_egress_deploy=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl get pod busybox-egress -o json > busybox_egress_pod.json")
+    busybox_egress_status=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_egress_pod.json | jq '."status"."conditions"[1].type'" | grep "Ready")
+
+    if [ $? == 0 ]; then
+        log_level -i "Deployed busybox-egress pod."
+    else    
+        log_level -e "Busybox-egress deployment failed."
+        result="failed"
+        printf '{"result":"%s","error":"%s"}\n' "$result" "Busybox-egress deployment was not successfull." > $OUTPUT_SUMMARYFILE
+        exit 1
+    fi 
+
+    busybox_ingress_log=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl logs busybox-ingress > busybox_ingress_log.txt")
+    busybox_egress_log=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl logs busybox-egress > busybox_egress_log.txt")
     
     log_level -i "=========================================================================="
     result="pass"

@@ -57,6 +57,7 @@ touch $LOG_FILENAME
     TEST_DIRECTORY="/home/$USER_NAME/azure-cni-network-policies"
     NETWORK_POLICY_FILENAME="network_policy.yaml"
     NGINX_WELCOME="Welcome to nginx!"
+    GOOGLE_INFO="Search the world's information"
     DOWNLOAD_TIMEDOUT="download timed out"
     BUSYBOX_DEPLOY_FILENAME="busybox_deploy.yaml"
 
@@ -76,8 +77,8 @@ touch $LOG_FILENAME
     log_level -i "BUSYBOX_DEPLOY_FILENAME   : $BUSYBOX_DEPLOY_FILENAME"
     log_level -i "------------------------------------------------------------------------"
     
-    log_level -i "Evaluate Log from busybox Pod"
-    validate_access=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_log.txt" | grep "$NGINX_WELCOME")
+    log_level -i "Evaluate log from busybox-ingress pod"
+    validate_ingress_access=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_ingress_log.txt" | grep "$NGINX_WELCOME")
     if [[ -z $validate_access ]]; then
         log_level -e "Failed to access nginx pod." 
         result="failed"
@@ -85,44 +86,86 @@ touch $LOG_FILENAME
         exit 1
     fi
 
-    log_level -i "Create Network Policy rule to block ingress traffic to nginx pod"
+    log_level -i "Evaluate log from busybox-egress pod"
+    validate_ingress_access=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_egress_log.txt" | grep "$GOOGLE_INFO")
+    if [[ -z $validate_access ]]; then
+        log_level -e "Failed to access Google website." 
+        result="failed"
+        printf '{"result":"%s","error":"%s"}\n' "$result" "Failed to access Google website." > $OUTPUT_SUMMARYFILE
+        exit 1
+    fi
+
+    log_level -i "Delete the old busybox pods"
+    ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl delete -f $BUSYBOX_DEPLOY_FILENAME";sleep 60
+
+    log_level -i "Create network policy rule to block ingress traffic to nginx pod and egress traffic to Google website"
     ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl create -f $NETWORK_POLICY_FILENAME";sleep 10
     network_policy_create=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl get networkPolicy -o json > network_policy.json")
-    network_policy_status=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat network_policy.json | jq '.items[0]."metadata"."name"'" | grep "azure-cni")
+
+    network_policy_ingress_status=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat network_policy.json | jq '.items[1]."metadata"."name"'" | grep "azure-cni-block-ingress")
 
     if [ $? == 0 ]; then
-        log_level -i "Created Azure CNI network policy."
+        log_level -i "Created Azure CNI network ingress policy."
     else    
-        log_level -e "Azure CNI network policy creation failed."
+        log_level -e "Azure CNI network ingress policy creation failed."
         result="failed"
-        printf '{"result":"%s","error":"%s"}\n' "$result" "Azure CNI network policy creation was not successfull." > $OUTPUT_SUMMARYFILE
+        printf '{"result":"%s","error":"%s"}\n' "$result" "Azure CNI network ingress policy creation was not successfull." > $OUTPUT_SUMMARYFILE
         exit 1
     fi 
 
-    log_level -i "Delete the old busybox pod"
-    ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl delete pod busybox";sleep 60
-    
-    log_level -i "Create and evaluate log from busybox Pod again"
-    busybox_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl create -f $BUSYBOX_DEPLOY_FILENAME";sleep 10)
-    busybox_deploy_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl get pod -o json > busybox_pod_new.json")
-    busybox_status_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_pod_new.json | jq '.items[0]."status"."conditions"[1].type'" | grep "Ready")
+    network_policy_egress_status=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat network_policy.json | jq '.items[0]."metadata"."name"'" | grep "azure-cni-block-egress")
 
     if [ $? == 0 ]; then
-        log_level -i "Deployed new busybox pod."
+        log_level -i "Created Azure CNI network egress policy."
     else    
-        log_level -e "New busybox deployment failed."
+        log_level -e "Azure CNI network egress policy creation failed."
         result="failed"
-        printf '{"result":"%s","error":"%s"}\n' "$result" "New busybox deployment was not successfull." > $OUTPUT_SUMMARYFILE
+        printf '{"result":"%s","error":"%s"}\n' "$result" "Azure CNI network egress policy creation was not successfull." > $OUTPUT_SUMMARYFILE
         exit 1
     fi 
 
-    busybox_log_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl logs busybox > busybox_log_new.txt")
+    log_level -i "Create and evaluate log from busybox pods again"
+    busybox_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl create -f $BUSYBOX_DEPLOY_FILENAME";sleep 30)
 
-    validate_blocks=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_log_new.txt" | grep "$DOWNLOAD_TIMEDOUT")
+    busybox_ingress_deploy_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl get pod busybox-ingress -o json > busybox_ingress_pod_new.json")
+    busybox_ingress_status_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_ingress_pod_new.json | jq '."status"."conditions"[1].type'" | grep "Ready")
+
+    if [ $? == 0 ]; then
+        log_level -i "Deployed new busybox ingress pod."
+    else    
+        log_level -e "New busybox ingress deployment failed."
+        result="failed"
+        printf '{"result":"%s","error":"%s"}\n' "$result" "New busybox ingress deployment was not successfull." > $OUTPUT_SUMMARYFILE
+        exit 1
+    fi 
+
+    busybox_egress_deploy_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl get pod busybox-egress -o json > busybox_egress_pod_new.json")
+    busybox_egress_status_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_egress_pod_new.json | jq '."status"."conditions"[1].type'" | grep "Ready")
+
+    if [ $? == 0 ]; then
+        log_level -i "Deployed new busybox egress pod."
+    else    
+        log_level -e "New busybox egress deployment failed."
+        result="failed"
+        printf '{"result":"%s","error":"%s"}\n' "$result" "New busybox egress deployment was not successfull." > $OUTPUT_SUMMARYFILE
+        exit 1
+    fi 
+
+    busybox_ingress_log_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl logs busybox-ingress > busybox_ingress_log_new.txt")
+    validate_ingress_blocks=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_ingress_log_new.txt" | grep "$DOWNLOAD_TIMEDOUT")
     if [[ -z $validate_blocks ]]; then
         log_level -e "Failed to block access to nginx pod." 
         result="failed"
         printf '{"result":"%s","error":"%s"}\n' "$result" "Network Policy failed to block ingress traffic." > $OUTPUT_SUMMARYFILE
+        exit 1
+    fi
+
+    busybox_egress_log_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl logs busybox-egress > busybox_egress_log_new.txt")
+    validate_ingress_blocks=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_egress_log_new.txt" | grep "$DOWNLOAD_TIMEDOUT")
+    if [[ -z $validate_blocks ]]; then
+        log_level -e "Failed to block access to Google website." 
+        result="failed"
+        printf '{"result":"%s","error":"%s"}\n' "$result" "Network Policy failed to block egress traffic." > $OUTPUT_SUMMARYFILE
         exit 1
     fi
 
