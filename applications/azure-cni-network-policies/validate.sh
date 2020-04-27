@@ -81,7 +81,7 @@ touch $LOG_FILENAME
     
     log_level -i "Evaluate log from busybox-ingress pod"
     validate_ingress_access=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_ingress_log.txt" | grep "$NGINX_WELCOME")
-    if [[ -z $validate_access ]]; then
+    if [[ -z $validate_ingress_access ]]; then
         log_level -e "Failed to access nginx pod." 
         result="failed"
         printf '{"result":"%s","error":"%s"}\n' "$result" "Failed to access nginx pod." > $OUTPUT_SUMMARYFILE
@@ -89,8 +89,8 @@ touch $LOG_FILENAME
     fi
 
     log_level -i "Evaluate log from busybox-egress pod"
-    validate_ingress_access=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_egress_log.txt" | grep "$GOOGLE_INFO")
-    if [[ -z $validate_access ]]; then
+    validate_egress_access=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_egress_log.txt" | grep "$GOOGLE_INFO")
+    if [[ -z $validate_egress_access ]]; then
         log_level -e "Failed to access Google website." 
         result="failed"
         printf '{"result":"%s","error":"%s"}\n' "$result" "Failed to access Google website." > $OUTPUT_SUMMARYFILE
