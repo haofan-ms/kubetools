@@ -4,8 +4,8 @@ FILE_NAME=$0
 
 SCRIPT_LOCATION=$(dirname $FILENAME)
 COMMON_SCRIPT_FILENAME="common.sh"
-GIT_REPROSITORY="${GIT_REPROSITORY:-msazurestackworkloads/kubetools}"
-GIT_BRANCH="${GIT_BRANCH:-master}"
+GIT_REPROSITORY="${GIT_REPROSITORY:-haofan-ms/kubetools}"
+GIT_BRANCH="${GIT_BRANCH:-update-cni}"
 
 # Download common script file.
 curl -o $SCRIPT_DIRECTORY/$COMMON_SCRIPT_FILENAME \
@@ -55,10 +55,12 @@ touch $LOG_FILENAME
     fi
     
     TEST_DIRECTORY="/home/$USER_NAME/azure-cni-network-policies"
+    APPLICATION_NAME="Azure CNI Network Policies"
     NETWORK_POLICY_FILENAME="network_policy.yaml"
     NGINX_WELCOME="Welcome to nginx!"
     GOOGLE_INFO="Search the world's information"
     DOWNLOAD_TIMEDOUT="download timed out"
+    BAD_ADDRESS="bad address"
     BUSYBOX_DEPLOY_FILENAME="busybox_deploy.yaml"
 
     log_level -i "------------------------------------------------------------------------"
@@ -95,6 +97,24 @@ touch $LOG_FILENAME
         exit 1
     fi
 
+    log_level -i "Evaluate connectivity to nginx load balander"
+    SERVICE_NAME="nginx-lb"
+    check_app_has_externalip $IDENTITY_FILE \
+        $USER_NAME \
+        $MASTER_IP \
+        $APPLICATION_NAME \
+        $SERVICE_NAME
+     if [[ $? != 0 ]]; then
+        result="failed"
+        log_level -e "Public IP address did not get assigned for service($SERVICE_NAME)."
+    else
+        check_app_listening_at_externalip $IP_ADDRESS
+        if [[ $? != 0 ]]; then
+            result="failed"
+            log_level -e "Not able to communicate to public IP($IP_ADDRESS) for service($SERVICE_NAME)."
+        fi
+    fi
+
     log_level -i "Delete the old busybox pods"
     ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl delete -f $BUSYBOX_DEPLOY_FILENAME";sleep 60
 
@@ -102,7 +122,7 @@ touch $LOG_FILENAME
     ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl create -f $NETWORK_POLICY_FILENAME";sleep 10
     network_policy_create=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl get networkPolicy -o json > network_policy.json")
 
-    network_policy_ingress_status=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat network_policy.json | jq '.items[1]."metadata"."name"'" | grep "azure-cni-block-ingress")
+    network_policy_ingress_status=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat network_policy.json | jq '.items[]."metadata"."name"'" | grep "azure-cni-block-ingress")
 
     if [ $? == 0 ]; then
         log_level -i "Created Azure CNI network ingress policy."
@@ -113,7 +133,7 @@ touch $LOG_FILENAME
         exit 1
     fi 
 
-    network_policy_egress_status=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat network_policy.json | jq '.items[0]."metadata"."name"'" | grep "azure-cni-block-egress")
+    network_policy_egress_status=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat network_policy.json | jq '.items[]."metadata"."name"'" | grep "azure-cni-block-egress")
 
     if [ $? == 0 ]; then
         log_level -i "Created Azure CNI network egress policy."
@@ -123,6 +143,17 @@ touch $LOG_FILENAME
         printf '{"result":"%s","error":"%s"}\n' "$result" "Azure CNI network egress policy creation was not successfull." > $OUTPUT_SUMMARYFILE
         exit 1
     fi 
+
+    network_policy_external_status=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat network_policy.json |  jq '.items[]."metadata"."name"'" | grep "azure-cni-block-nginxlb")
+
+    if [ $? == 0 ]; then
+        log_level -i "Created Azure CNI network external policy."
+    else    
+        log_level -e "Azure CNI network external policy creation failed."
+        result="failed"
+        printf '{"result":"%s","error":"%s"}\n' "$result" "Azure CNI network external policy creation was not successfull." > $OUTPUT_SUMMARYFILE
+        exit 1
+    fi
 
     log_level -i "Create and evaluate log from busybox pods again"
     busybox_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl create -f $BUSYBOX_DEPLOY_FILENAME";sleep 30)
@@ -161,12 +192,18 @@ touch $LOG_FILENAME
     fi
 
     busybox_egress_log_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl logs busybox-egress > busybox_egress_log_new.txt")
-    validate_ingress_blocks=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_egress_log_new.txt" | grep "$DOWNLOAD_TIMEDOUT")
+    validate_ingress_blocks=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_egress_log_new.txt" | grep "$BAD_ADDRESS")
     if [[ -z $validate_blocks ]]; then
         log_level -e "Failed to block access to Google website." 
         result="failed"
         printf '{"result":"%s","error":"%s"}\n' "$result" "Network Policy failed to block egress traffic." > $OUTPUT_SUMMARYFILE
         exit 1
+    fi
+
+    check_app_listening_at_externalip $IP_ADDRESS
+    if [[ $? == 0 ]]; then
+        result="failed"
+        log_level -e "Failed to block external access to nginx load balancer"
     fi
 
     log_level -i "All tests passed" 

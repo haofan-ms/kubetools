@@ -32,3 +32,47 @@ spec:
     - port: 80
   selector:
     role: nginx
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-lb
+  labels:
+    role: nginx-lb
+  annotations:
+    monitoring: "true"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      role: nginx-lb
+  template:
+    metadata:
+      labels:
+        role: nginx-lb
+    spec:
+      containers:
+      - image: nginx
+        name: nginx-lb
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+          requests: 
+            memory: "1Gi"
+            cpu: "500m"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-lb
+spec:
+  ports:
+    - port: 80
+  selector:
+    role: nginx-lb
+  type: LoadBalancer

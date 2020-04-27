@@ -4,8 +4,8 @@ FILE_NAME=$0
 
 SCRIPT_LOCATION=$(dirname $FILENAME)
 COMMON_SCRIPT_FILENAME="common.sh"
-GIT_REPROSITORY="${GIT_REPROSITORY:-msazurestackworkloads/kubetools}"
-GIT_BRANCH="${GIT_BRANCH:-master}"
+GIT_REPROSITORY="${GIT_REPROSITORY:-haofan-ms/kubetools}"
+GIT_BRANCH="${GIT_BRANCH:-update-cni}"
 
 # Download common script file.
 curl -o $SCRIPT_DIRECTORY/$COMMON_SCRIPT_FILENAME \
@@ -119,9 +119,9 @@ touch $LOG_FILENAME
     log_level -i "Installing nginx and busybox."
 
     ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "sudo chmod 744 $TEST_DIRECTORY/$NGINX_DEPLOY_FILENAME; cd $TEST_DIRECTORY;"
-    nginx=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl create -f $NGINX_DEPLOY_FILENAME";sleep 60)
+    nginx=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl create -f $NGINX_DEPLOY_FILENAME";sleep 5m)
     nginx_deploy=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl get deployment -o json > nginx_deploy.json")
-    nginx_status=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat nginx_deploy.json | jq '.items[0]."status"."conditions"[0].type'" | grep "Available";sleep 2m)
+    nginx_status=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat nginx_deploy.json | jq --arg name "nginx" '.items[] | select(.metadata.name == $name) | ."status"."conditions"[0].type'" | grep "Available";sleep 30)
 
     if [ $? == 0 ]; then
         log_level -i "Deployed nginx app."
@@ -129,6 +129,17 @@ touch $LOG_FILENAME
         log_level -e "Nginx deployment failed."
         result="failed"
         printf '{"result":"%s","error":"%s"}\n' "$result" "Nginx deployment was not successfull." > $OUTPUT_SUMMARYFILE
+        exit 1
+    fi 
+
+    nginx_lb_status=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat nginx_deploy.json | jq --arg name "nginx-lb" '.items[] | select(.metadata.name == $name) | ."status"."conditions"[0].type'" | grep "Available";sleep 30)
+
+    if [ $? == 0 ]; then
+        log_level -i "Deployed nginx load balancer app."
+    else    
+        log_level -e "Nginx load balancer deployment failed."
+        result="failed"
+        printf '{"result":"%s","error":"%s"}\n' "$result" "Nginx load balancer deployment was not successfull." > $OUTPUT_SUMMARYFILE
         exit 1
     fi 
 

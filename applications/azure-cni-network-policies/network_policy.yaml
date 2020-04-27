@@ -22,3 +22,16 @@ spec:
   egress: []
   policyTypes:
   - Egress
+
+---
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: azure-cni-block-nginxlb
+spec:
+  podSelector:
+    matchLabels:
+      role: nginx-lb
+  ingress: []
+  policyTypes:
+    - Ingress
