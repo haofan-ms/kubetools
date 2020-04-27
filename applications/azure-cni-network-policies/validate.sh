@@ -107,11 +107,15 @@ touch $LOG_FILENAME
      if [[ $? != 0 ]]; then
         result="failed"
         log_level -e "Public IP address did not get assigned for service($SERVICE_NAME)."
+        printf '{"result":"%s","error":"%s"}\n' "$result" "Azure CNI network failed to assign public IP." > $OUTPUT_SUMMARYFILE
+        exit 1
     else
         check_app_listening_at_externalip $IP_ADDRESS
         if [[ $? != 0 ]]; then
             result="failed"
             log_level -e "Not able to communicate to public IP($IP_ADDRESS) for service($SERVICE_NAME)."
+            printf '{"result":"%s","error":"%s"}\n' "$result" "Azure CNI network failed to connect to public IP." > $OUTPUT_SUMMARYFILE
+        exit 1
         fi
     fi
 
@@ -192,8 +196,8 @@ touch $LOG_FILENAME
     fi
 
     busybox_egress_log_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl logs busybox-egress > busybox_egress_log_new.txt")
-    validate_ingress_blocks=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_egress_log_new.txt" | grep "$BAD_ADDRESS")
-    if [[ -z $validate_ingress_blocks ]]; then
+    validate_egress_blocks=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_egress_log_new.txt" | grep "$BAD_ADDRESS")
+    if [[ -z $validate_egress_blocks ]]; then
         log_level -e "Failed to block access to Google website." 
         result="failed"
         printf '{"result":"%s","error":"%s"}\n' "$result" "Network Policy failed to block egress traffic." > $OUTPUT_SUMMARYFILE
