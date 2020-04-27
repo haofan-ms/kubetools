@@ -55,7 +55,7 @@ touch $LOG_FILENAME
     fi
     
     TEST_DIRECTORY="/home/$USER_NAME/azure-cni-network-policies"
-    APPLICATION_NAME="Azure CNI Network Policies"
+    APPLICATION_NAME="Azure_CNI_network_policies"
     NETWORK_POLICY_FILENAME="network_policy.yaml"
     NGINX_WELCOME="Welcome to nginx!"
     GOOGLE_INFO="Search the world's information"
@@ -184,7 +184,7 @@ touch $LOG_FILENAME
 
     busybox_ingress_log_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl logs busybox-ingress > busybox_ingress_log_new.txt")
     validate_ingress_blocks=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_ingress_log_new.txt" | grep "$DOWNLOAD_TIMEDOUT")
-    if [[ -z $validate_blocks ]]; then
+    if [[ -z $validate_ingress_blocks ]]; then
         log_level -e "Failed to block access to nginx pod." 
         result="failed"
         printf '{"result":"%s","error":"%s"}\n' "$result" "Network Policy failed to block ingress traffic." > $OUTPUT_SUMMARYFILE
@@ -193,7 +193,7 @@ touch $LOG_FILENAME
 
     busybox_egress_log_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl logs busybox-egress > busybox_egress_log_new.txt")
     validate_ingress_blocks=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_egress_log_new.txt" | grep "$BAD_ADDRESS")
-    if [[ -z $validate_blocks ]]; then
+    if [[ -z $validate_ingress_blocks ]]; then
         log_level -e "Failed to block access to Google website." 
         result="failed"
         printf '{"result":"%s","error":"%s"}\n' "$result" "Network Policy failed to block egress traffic." > $OUTPUT_SUMMARYFILE
