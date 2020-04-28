@@ -4,8 +4,8 @@ FILE_NAME=$0
 
 SCRIPT_LOCATION=$(dirname $FILENAME)
 COMMON_SCRIPT_FILENAME="common.sh"
-GIT_REPROSITORY="${GIT_REPROSITORY:-haofan-ms/kubetools}"
-GIT_BRANCH="${GIT_BRANCH:-update-cni}"
+GIT_REPROSITORY="${GIT_REPROSITORY:-msazurestackworkloads/kubetools}"
+GIT_BRANCH="${GIT_BRANCH:-master}"
 
 # Download common script file.
 curl -o $SCRIPT_DIRECTORY/$COMMON_SCRIPT_FILENAME \
@@ -194,7 +194,7 @@ touch $LOG_FILENAME
         printf '{"result":"%s","error":"%s"}\n' "$result" "Network Policy failed to block ingress traffic." > $OUTPUT_SUMMARYFILE
         exit 1
     else
-        log_level -e "Done checking pod to pod connectivity." 
+        log_level -i "Done checking pod to pod connectivity." 
     fi
 
     busybox_egress_log_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl logs busybox-egress > busybox_egress_log_new.txt")
@@ -205,7 +205,7 @@ touch $LOG_FILENAME
         printf '{"result":"%s","error":"%s"}\n' "$result" "Network Policy failed to block egress traffic." > $OUTPUT_SUMMARYFILE
         exit 1
     else
-        log_level -e "Done checking pod to external connectivity." 
+        log_level -i "Done checking pod to external connectivity." 
     fi
 
     check_app_listening_at_externalip $IP_ADDRESS
@@ -213,7 +213,7 @@ touch $LOG_FILENAME
         result="failed"
         log_level -e "Failed to block external access to nginx load balancer"
     else
-        log_level -e "Done checking external to pod connectivity." 
+        log_level -i "Done checking external to pod connectivity." 
     fi
 
     log_level -i "All tests passed" 
