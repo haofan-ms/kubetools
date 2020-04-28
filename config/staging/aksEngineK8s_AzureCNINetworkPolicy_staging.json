@@ -27,10 +27,10 @@
 				"windowsNodeDistroSKU": "2019-datacenter-core-smalldisk",
 				"containerRuntime": "docker",
 				"aksEngine": {
-					"aksEngineBaseURL": "https://github.com/jadarsie/aks-engine/releases/download",
-					"aksEngineReleaseVersion": "44a35c0",
+					"aksEngineBaseURL": "https://github.com/azure/aks-engine/releases/download",
+					"aksEngineReleaseVersion": "v0.48.0",
 					"clusterDefinitionFileName": "clusterDefinition.json",
-					"kubernetesImageBase": "mcr.microsoft.com/k8s/azurestack/core/"
+					"kubernetesImageBase": ""
 				}
 			}
 		]
