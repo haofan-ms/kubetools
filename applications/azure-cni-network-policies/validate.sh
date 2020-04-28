@@ -160,7 +160,7 @@ touch $LOG_FILENAME
     fi
 
     log_level -i "Create and evaluate log from busybox pods again"
-    busybox_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl create -f $BUSYBOX_DEPLOY_FILENAME";sleep 30)
+    busybox_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl create -f $BUSYBOX_DEPLOY_FILENAME";sleep 60)
 
     busybox_ingress_deploy_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl get pod busybox-ingress -o json > busybox_ingress_pod_new.json")
     busybox_ingress_status_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;cat busybox_ingress_pod_new.json | jq '."status"."conditions"[1].type'" | grep "Ready")
@@ -193,6 +193,8 @@ touch $LOG_FILENAME
         result="failed"
         printf '{"result":"%s","error":"%s"}\n' "$result" "Network Policy failed to block ingress traffic." > $OUTPUT_SUMMARYFILE
         exit 1
+    else
+        log_level -e "Done checking pod to pod connectivity." 
     fi
 
     busybox_egress_log_new=$(ssh -t -i $IDENTITY_FILE $USER_NAME@$MASTER_IP "cd $TEST_DIRECTORY;kubectl logs busybox-egress > busybox_egress_log_new.txt")
@@ -202,12 +204,16 @@ touch $LOG_FILENAME
         result="failed"
         printf '{"result":"%s","error":"%s"}\n' "$result" "Network Policy failed to block egress traffic." > $OUTPUT_SUMMARYFILE
         exit 1
+    else
+        log_level -e "Done checking pod to external connectivity." 
     fi
 
     check_app_listening_at_externalip $IP_ADDRESS
     if [[ $? == 0 ]]; then
         result="failed"
         log_level -e "Failed to block external access to nginx load balancer"
+    else
+        log_level -e "Done checking external to pod connectivity." 
     fi
 
     log_level -i "All tests passed" 
